@@ -13,8 +13,7 @@ const consumer = new Kafka.KafkaConsumer(
 );
 consumer.connect();
 
-async function main(damage, geolocation, date) {
-  console.log("hola", { date, damage, geolocation });
+async function main(damage, geolocation, date, province) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -28,8 +27,8 @@ async function main(damage, geolocation, date) {
     from: '"Cristina" <street.damage.team@gmail.com>', // sender address
     to: "<cristina.outeda.rua@gmail.com>", // list of receivers
     subject: "Notification", // Subject line
-    text: `Hello world? damage: ${damage}, geolocation: ${geolocation.altitude}, ${geolocation}`, // plain text body
-    html: `<div><b>Hello world?</b><b> damage: ${damage}, geolocation: ${geolocation}</b></div>`, // html body
+    text: `Hello world? damage: ${damage}, province: ${province}`, // plain text body
+    html: `<b>damage: ${damage}, province: ${province}</b>`, // html body
   });
 
   console.log("Message sent: %s", info.messageId);
@@ -48,7 +47,8 @@ consumer
   })
   .on("data", function (data) {
     console.log(`received message: ${eventType.fromBuffer(data.value)}`);
-    const { damage, geolocation, date } = eventType.fromBuffer(data.value);
-    console.log({ damage, geolocation, date });
-    main(damage, geolocation, date).catch(console.error);
+    const { damage, geolocation, date, province } = eventType.fromBuffer(
+      data.value
+    );
+    main(damage, geolocation, date, province).catch(console.error);
   });

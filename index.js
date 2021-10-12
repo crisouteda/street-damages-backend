@@ -1,11 +1,28 @@
-var AWS = require("aws-sdk");
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-
+import AWS from "aws-sdk";
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import cors from "cors";
+import Kafka from "node-rdkafka";
+import eventType from "./eventType.js";
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+const stream = Kafka.Producer.createWriteStream(
+  {
+    "metadata.broker.list": "localhost:9092",
+  },
+  {},
+  {
+    topic: "damage",
+  }
+);
+
+stream.on("error", (err) => {
+  console.error("Error in our kafka stream");
+  console.error(err);
+});
 
 app.use(
   cors({
@@ -43,14 +60,21 @@ app.get("/read", async (req, res) => {
 });
 
 app.post("/insert", async (req, res) => {
+  const Item = { ...req.body, date: Math.floor(new Date().getTime()) };
   const params = {
     TableName: TABLE_NAME,
-    Item: { ...req.body, date: Math.floor(new Date().getTime()) },
+    Item,
   };
   console.log(params);
   try {
     await dynamoClient.put(params).promise();
     res.send("insert data");
+    const success = stream.write(eventType.toBuffer(Item));
+    if (success) {
+      console.log(`message queued (${JSON.stringify(Item)})`);
+    } else {
+      console.log("Too many messages in the queue already..");
+    }
   } catch (err) {
     console.log(err);
   }

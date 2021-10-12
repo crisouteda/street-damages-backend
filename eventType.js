@@ -18,5 +18,9 @@ export default avro.Type.forSchema({
       name: "date",
       type: "float",
     },
+    {
+      name: "province",
+      type: "string",
+    },
   ],
 });

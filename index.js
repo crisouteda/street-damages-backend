@@ -46,6 +46,7 @@ AWS.config.update({
 
 const dynamoClient = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = "street-damage";
+const USERS_TABLE_NAME = "users-street-damage";
 
 app.get("/read", async (req, res) => {
   const params = {
@@ -59,7 +60,20 @@ app.get("/read", async (req, res) => {
   }
 });
 
-app.post("/insert", async (req, res) => {
+app.post("/insertUser", async (req, res) => {
+  const params = {
+    TableName: USERS_TABLE_NAME,
+    Item,
+  };
+  try {
+    await dynamoClient.put(params).promise();
+    res.send("insert data");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.post("/insertDamage", async (req, res) => {
   const Item = { ...req.body, date: Math.floor(new Date().getTime()) };
   const params = {
     TableName: TABLE_NAME,
